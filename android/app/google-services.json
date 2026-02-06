@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "75260454187",
-    "project_id": "depofibra-cf9d2",
-    "storage_bucket": "depofibra-cf9d2.firebasestorage.app"
+    "project_number": "885761570437",
+    "project_id": "depofibra-29097",
+    "storage_bucket": "depofibra-29097.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:75260454187:android:4a83b4d92de8929a26116e",
+        "mobilesdk_app_id": "1:885761570437:android:b8f0983a004b99c35a1bec",
         "android_client_info": {
           "package_name": "com.example.depofibra"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDIa1UGtRYB8jP3EONUtn920Vl2GaFrY_g"
+          "current_key": "AIzaSyDdldzBqbqs_sBGxzdYM4iodq4_qSzCkDc"
         }
       ],
       "services": {
