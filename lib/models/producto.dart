@@ -1,8 +1,8 @@
 class Producto {
-  String? id; // El ID único del documento en Firestore
+  String? id; // El ID del documento en Firebase
   String nombre;
   String tipo; // 'deposito' o 'piscina'
-  double capacidad; // Lo guardaremos como número para poder ordenar por tamaño
+  double capacidad;
   double precio;
 
   Producto({
@@ -13,8 +13,7 @@ class Producto {
     required this.precio,
   });
 
-  // Método para convertir nuestro objeto a un Mapa (JSON)
-  // Esto es necesario para subir los datos a Firestore
+  // Convierte el objeto a un Mapa para guardarlo en Firebase
   Map<String, dynamic> toMap() {
     return {
       'nombre': nombre,
@@ -24,14 +23,13 @@ class Producto {
     };
   }
 
-  // Método de fábrica para crear un Producto desde un Mapa de Firestore
-  // Esto se usa cuando descargamos datos de la base de datos
-  factory Producto.fromMap(Map<String, dynamic> map, String documentId) {
+  // Crea el objeto desde los datos que nos da Firebase
+  factory Producto.fromMap(Map<String, dynamic> map, String id) {
     return Producto(
-      id: documentId, // Guardamos el ID del documento para poder editarlo o borrarlo después
+      id: id,
       nombre: map['nombre'] ?? '',
       tipo: map['tipo'] ?? 'deposito',
-      // Convertimos a double explícitamente para evitar errores si Firestore devuelve un int
+      // Convertimos a double para asegurar que no falle si viene un entero
       capacidad: (map['capacidad'] ?? 0).toDouble(),
       precio: (map['precio'] ?? 0).toDouble(),
     );

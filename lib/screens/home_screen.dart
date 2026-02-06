@@ -1,40 +1,40 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-// Estas importaciones darán error hasta que creemos los archivos en los siguientes pasos
+// Estas pantallas las crearemos a continuación:
 import 'productos_screen.dart';
 import 'clientes_screen.dart';
 import 'pedidos_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  final AuthService _auth = AuthService();
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Depofibra Panel'),
-        backgroundColor: Color(0xFF01488e), // Azul corporativo
-        foregroundColor: Colors.white, // Texto blanco
+        title: const Text('Depofibra Panel'),
+        backgroundColor: const Color(0xFF01488e), // Tu azul corporativo
+        foregroundColor: Colors.white,
         actions: [
-          // Botón de Cerrar Sesión
+          // Botón de salir
           IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: () async {
-              await _auth.signOut();
-            },
-          )
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () => AuthService().signOut(context),
+          ),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Bienvenido a la gestión',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const Text(
+              'Menú de Gestión',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF01488e)),
             ),
-            SizedBox(height: 20),
-            // Usamos Expanded para que el Grid ocupe el espacio restante
+            const SizedBox(height: 20),
+            
+            // Grid de navegación
             Expanded(
               child: GridView.count(
                 crossAxisCount: 2, // 2 columnas
@@ -42,35 +42,35 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSpacing: 15,
                 children: [
                   _MenuCard(
-                    icon: Icons.water_damage, // Icono de depósito
-                    label: 'Productos',
+                    icon: Icons.water_damage,
+                    title: 'Productos',
                     color: Colors.blue,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => ProductosScreen()),
+                        MaterialPageRoute(builder: (_) => const ProductosScreen()),
                       );
                     },
                   ),
                   _MenuCard(
                     icon: Icons.people,
-                    label: 'Clientes',
+                    title: 'Clientes',
                     color: Colors.orange,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => ClientesScreen()),
+                        MaterialPageRoute(builder: (_) => const ClientesScreen()),
                       );
                     },
                   ),
                   _MenuCard(
                     icon: Icons.shopping_cart,
-                    label: 'Pedidos',
+                    title: 'Pedidos',
                     color: Colors.green,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => PedidosScreen()),
+                        MaterialPageRoute(builder: (_) => const PedidosScreen()),
                       );
                     },
                   ),
@@ -84,16 +84,16 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// Widget auxiliar privado para no repetir código en las tarjetas
+// Widget privado para las tarjetas del menú (Todo en un solo archivo)
 class _MenuCard extends StatelessWidget {
   final IconData icon;
-  final String label;
+  final String title;
   final Color color;
   final VoidCallback onTap;
 
   const _MenuCard({
     required this.icon,
-    required this.label,
+    required this.title,
     required this.color,
     required this.onTap,
   });
@@ -114,10 +114,10 @@ class _MenuCard extends StatelessWidget {
               backgroundColor: color.withOpacity(0.1),
               child: Icon(icon, size: 35, color: color),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
-              label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),

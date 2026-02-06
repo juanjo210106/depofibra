@@ -1,43 +1,76 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+import '../screens/home_screen.dart';
+import '../screens/login_screen.dart'; // Usaremos LoginScreen en lugar de AuthScreen
 
 class AuthService {
-  // Instancias de Firebase y Google
+  // Instancias de Firebase
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Este "Stream" es como una tubería que nos avisa si el usuario
-  // está logueado o no. Lo usaremos para cambiar entre la pantalla de Login y la Home automáticamente.
-  Stream<User?> get usuarioActual => _auth.authStateChanges();
-
-  // Función para iniciar sesión con Google
-  Future<UserCredential?> signInWithGoogle() async {
+  // Método para iniciar sesión con Google
+  Future<void> signInWithGoogle(BuildContext context) async {
     try {
-      // 1. Iniciar el flujo de login de Google (abre la ventana de elegir cuenta)
+      // 1. Abrir ventana de Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser == null) return null; // El usuario canceló el login
+      if (googleUser == null) return; // Usuario canceló
 
-      // 2. Obtener los detalles de autenticación de la solicitud
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      // 2. Obtener credenciales
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      // 3. Crear una credencial nueva para Firebase con los tokens de Google
-      final credential = GoogleAuthProvider.credential(
+      final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // 4. Iniciar sesión en Firebase con esa credencial
-      return await _auth.signInWithCredential(credential);
+      // 3. Login en Firebase
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
+
+      if (user != null) {
+        // 4. Guardar datos del usuario en Firestore (Opcional pero recomendado)
+        await _db.collection('users').doc(user.uid).set({
+          'uid': user.uid,
+          'nombre': user.displayName ?? 'Usuario',
+          'email': user.email,
+          'ultimo_login': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // 5. Ir a la Home
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      }
     } catch (e) {
-      print("Error en login: $e");
-      return null;
+      print("Error en Login: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al conectar: $e"), backgroundColor: Colors.red),
+      );
     }
   }
 
-  // Función para cerrar sesión
-  Future<void> signOut() async {
-    await _googleSignIn.signOut(); // Salir de Google
-    await _auth.signOut();         // Salir de Firebase
+  // Cerrar sesión
+  Future<void> signOut(BuildContext context) async {
+    await _googleSignIn.signOut();
+    await _auth.signOut();
+
+    // Volver al Login
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
+
+  // Getter útil para saber si hay usuario activo
+  User? get currentUser => _auth.currentUser;
 }

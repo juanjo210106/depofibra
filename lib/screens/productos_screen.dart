@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 import '../models/producto.dart';
 import '../services/firestore_service.dart';
-import '../widgets/input_decorations.dart';
 
 class ProductosScreen extends StatefulWidget {
+  const ProductosScreen({super.key});
+
   @override
-  _ProductosScreenState createState() => _ProductosScreenState();
+  State<ProductosScreen> createState() => _ProductosScreenState();
 }
 
 class _ProductosScreenState extends State<ProductosScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Controladores de texto para capturar lo que el usuario escribe
+  // Controladores de texto
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _capacidadController = TextEditingController();
   final TextEditingController _precioController = TextEditingController();
   
-  // Variable para guardar la selección del desplegable
-  String _tipoSeleccionado = 'deposito'; 
+  String _tipoSeleccionado = 'deposito'; // Valor por defecto
 
-  // Esta función muestra el formulario flotante
+  // Función para mostrar el formulario (Crear o Editar)
   void _mostrarFormulario({Producto? producto}) {
-    // Si pasamos un producto, es MODO EDICIÓN: rellenamos los campos
     if (producto != null) {
+      // Si editamos, rellenamos los datos
       _nombreController.text = producto.nombre;
       _capacidadController.text = producto.capacidad.toString();
       _precioController.text = producto.precio.toString();
       _tipoSeleccionado = producto.tipo;
     } else {
-      // Si no, es MODO CREAR: limpiamos los campos
+      // Si es nuevo, limpiamos
       _nombreController.clear();
       _capacidadController.clear();
       _precioController.clear();
@@ -38,24 +38,33 @@ class _ProductosScreenState extends State<ProductosScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        // StatefulBuilder es necesario para que el Dropdown cambie visualmente DENTRO del diálogo
+        // StatefulBuilder permite actualizar el Dropdown dentro del diálogo
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
               title: Text(producto == null ? 'Nuevo Producto' : 'Editar Producto'),
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // El diálogo se ajusta al contenido
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    // CAMPO NOMBRE
                     TextField(
                       controller: _nombreController,
-                      decoration: InputDecorations.authInputDecoration(
-                          hintText: 'Ej. Depósito 2000L', labelText: 'Nombre'),
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        hintText: 'Ej. Depósito 2000L',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                    SizedBox(height: 10),
-                    // Desplegable para Tipo
+                    const SizedBox(height: 10),
+
+                    // CAMPO TIPO (Dropdown)
                     DropdownButtonFormField<String>(
                       value: _tipoSeleccionado,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo',
+                        border: OutlineInputBorder(),
+                      ),
                       items: ['deposito', 'piscina'].map((tipo) {
                         return DropdownMenuItem(
                           value: tipo,
@@ -63,68 +72,66 @@ class _ProductosScreenState extends State<ProductosScreen> {
                         );
                       }).toList(),
                       onChanged: (val) {
-                        // Usamos setStateDialog para redibujar solo el diálogo
                         setStateDialog(() => _tipoSeleccionado = val!);
                       },
-                      decoration: InputDecorations.authInputDecoration(
-                          hintText: 'Tipo', labelText: 'Tipo'),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
+
+                    // CAMPO CAPACIDAD
                     TextField(
                       controller: _capacidadController,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecorations.authInputDecoration(
-                          hintText: 'Litros', labelText: 'Capacidad'),
+                      decoration: const InputDecoration(
+                        labelText: 'Capacidad (Litros)',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
+
+                    // CAMPO PRECIO
                     TextField(
                       controller: _precioController,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecorations.authInputDecoration(
-                          hintText: 'Euros', labelText: 'Precio'),
+                      decoration: const InputDecoration(
+                        labelText: 'Precio (€)',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ],
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context), // Cerrar sin guardar
-                  child: Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF01488e)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF01488e)),
                   onPressed: () async {
-                    // 1. Recoger datos
+                    // Guardar
                     final nombre = _nombreController.text;
-                    // tryParse evita errores si el usuario escribe texto en vez de números
                     final capacidad = double.tryParse(_capacidadController.text) ?? 0;
                     final precio = double.tryParse(_precioController.text) ?? 0;
 
-                    if (nombre.isEmpty) return; // Validación simple
+                    if (nombre.isEmpty) return;
 
-                    // 2. Guardar en Firebase
+                    final nuevoProd = Producto(
+                      id: producto?.id, // Mantiene ID si es edición
+                      nombre: nombre,
+                      tipo: _tipoSeleccionado,
+                      capacidad: capacidad,
+                      precio: precio,
+                    );
+
                     if (producto == null) {
-                      // CREAR NUEVO
-                      await _firestoreService.addProducto(Producto(
-                        nombre: nombre,
-                        tipo: _tipoSeleccionado,
-                        capacidad: capacidad,
-                        precio: precio,
-                      ));
+                      await _firestoreService.addProducto(nuevoProd);
                     } else {
-                      // ACTUALIZAR EXISTENTE (Usamos el ID original)
-                      await _firestoreService.updateProducto(Producto(
-                        id: producto.id,
-                        nombre: nombre,
-                        tipo: _tipoSeleccionado,
-                        capacidad: capacidad,
-                        precio: precio,
-                      ));
+                      await _firestoreService.updateProducto(nuevoProd);
                     }
 
-                    Navigator.pop(context); // Cerrar diálogo tras guardar
+                    if (context.mounted) Navigator.pop(context);
                   },
-                  child: Text('Guardar'),
+                  child: const Text('Guardar', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -138,26 +145,25 @@ class _ProductosScreenState extends State<ProductosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Productos'),
-        backgroundColor: Color(0xFF01488e),
+        title: const Text('Productos'),
+        backgroundColor: const Color(0xFF01488e),
+        foregroundColor: Colors.white,
       ),
-      // Botón flotante para añadir
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Color(0xFF01488e),
-        child: Icon(Icons.add),
+        backgroundColor: const Color(0xFF01488e),
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () => _mostrarFormulario(),
       ),
-      // StreamBuilder escucha los cambios en la base de datos en vivo
+      // Lista en tiempo real
       body: StreamBuilder<List<Producto>>(
         stream: _firestoreService.getProductos(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text('Error al cargar datos'));
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          
           final productos = snapshot.data!;
-
+          
           if (productos.isEmpty) {
-            return Center(child: Text('No hay productos registrados'));
+            return const Center(child: Text('No hay productos registrados.'));
           }
 
           return ListView.builder(
@@ -165,34 +171,27 @@ class _ProductosScreenState extends State<ProductosScreen> {
             itemBuilder: (context, index) {
               final prod = productos[index];
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: prod.tipo == 'piscina' 
-                        ? Colors.blue[100] 
-                        : Colors.grey[200],
+                    backgroundColor: prod.tipo == 'piscina' ? Colors.blue[100] : Colors.grey[300],
                     child: Icon(
                       prod.tipo == 'piscina' ? Icons.pool : Icons.water_damage,
-                      color: Color(0xFF01488e),
+                      color: const Color(0xFF01488e),
                     ),
                   ),
-                  title: Text(prod.nombre, style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(prod.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('${prod.capacidad.toStringAsFixed(0)} L  |  ${prod.precio} €'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Botón Editar
                       IconButton(
-                        icon: Icon(Icons.edit, color: Colors.indigo),
+                        icon: const Icon(Icons.edit, color: Colors.blue),
                         onPressed: () => _mostrarFormulario(producto: prod),
                       ),
-                      // Botón Borrar
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red[300]),
-                        onPressed: () async {
-                          // Preguntar confirmación (Opcional, pero buena práctica)
-                          await _firestoreService.deleteProducto(prod.id!);
-                        },
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _firestoreService.deleteProducto(prod.id!),
                       ),
                     ],
                   ),

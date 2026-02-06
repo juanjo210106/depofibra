@@ -2,52 +2,35 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Variable para saber si está cargando y mostrar un "spinner"
   bool _isLoading = false;
-
-  void _handleGoogleLogin() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final authService = AuthService();
-    final user = await authService.signInWithGoogle();
-
-    // Si el login falla o se cancela, quitamos el spinner
-    if (user == null) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-    // NOTA: Si el login es exitoso, el 'StreamBuilder' en main.dart (que haremos al final)
-    // detectará el cambio y nos llevará automágicamente al Home.
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(30.0),
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 1. LOGO o ÍCONO
-              Icon(
-                Icons.water_drop_rounded, // Representando líquidos/agua
+              // Logo / Icono Corporativo
+              const Icon(
+                Icons.water_drop_rounded,
                 size: 100,
-                color: Color(0xFF01488e), // Tu azul corporativo
+                color: Color(0xFF01488e),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-              // 2. TÍTULO
-              Text(
+              // Título
+              const Text(
                 'Depofibra',
                 style: TextStyle(
                   fontSize: 32,
@@ -55,34 +38,39 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Color(0xFF01488e),
                 ),
               ),
-              Text(
-                'Gestión de Depósitos y Piscinas',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              const Text(
+                'Gestión Integral',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              SizedBox(height: 50),
+              const SizedBox(height: 60),
 
-              // 3. BOTÓN DE LOGIN (O Spinner de carga)
-              _isLoading
-                  ? CircularProgressIndicator(color: Color(0xFF01488e))
-                  : ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black87,
-                        elevation: 3,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      icon: Icon(Icons.login, color: Color(0xFF01488e)),
-                      label: Text(
-                        'Iniciar sesión con Google',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      onPressed: _handleGoogleLogin,
+              // Botón de Login o Carga
+              if (_isLoading)
+                const CircularProgressIndicator(color: Color(0xFF01488e))
+              else
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF01488e),
+                    foregroundColor: Colors.white, // Texto blanco
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
+                  ),
+                  icon: const Icon(Icons.login),
+                  label: const Text(
+                    'Iniciar sesión con Google',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  onPressed: () async {
+                    setState(() => _isLoading = true);
+                    // Llamamos al servicio que creamos antes
+                    await AuthService().signInWithGoogle(context);
+                    if (mounted) {
+                      setState(() => _isLoading = false);
+                    }
+                  },
+                ),
             ],
           ),
         ),

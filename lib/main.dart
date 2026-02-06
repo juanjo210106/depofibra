@@ -1,65 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// IMPORTANTE: Este archivo se genera automáticamente al configurar Firebase
-// Si te da error, recuerda ejecutar 'flutterfire configure' en tu terminal
-import 'firebase_options.dart';
 
-import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
-  // Aseguramos que el motor de Flutter esté listo antes de llamar a código nativo
+  // Aseguramos que el motor gráfico de Flutter esté listo
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Inicializamos Firebase con la configuración de tu proyecto
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Inicializamos Firebase (Buscará automáticamente google-services.json)
+  await Firebase.initializeApp();
 
-  runApp(DepofibraApp());
+  runApp(const DepofibraApp());
 }
 
 class DepofibraApp extends StatelessWidget {
+  const DepofibraApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Quitamos la etiqueta "DEBUG"
+      debugShowCheckedModeBanner: false, // Quitamos la etiqueta "Debug"
       title: 'Depofibra',
       
-      // TEMA GLOBAL: Aquí definimos tu color corporativo para toda la app
+      // TEMA GLOBAL
       theme: ThemeData(
-        primaryColor: Color(0xFF01488e),
-        useMaterial3: true, // Diseño moderno
+        primaryColor: const Color(0xFF01488e),
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(0xFF01488e), // Tu azul genera toda la paleta
-          primary: Color(0xFF01488e),
+          seedColor: const Color(0xFF01488e),
+          primary: const Color(0xFF01488e), // Forzamos el color primario
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF01488e),
           foregroundColor: Colors.white,
           centerTitle: true,
         ),
       ),
 
-      // EL CEREBRO DE LA NAVEGACIÓN:
-      // Escuchamos el estado de la autenticación en tiempo real
+      // GESTOR DE ESTADO (Login vs Home)
+      // Escuchamos los cambios de autenticación de Firebase en tiempo real
       home: StreamBuilder<User?>(
-        stream: AuthService().usuarioActual,
+        stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // Si la conexión está esperando, podríamos mostrar un spinner
+          // Si Firebase está comprobando el estado, mostramos carga
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
-          // Si hay datos (usuario existe), vamos al Home
+          // Si hay usuario activo, vamos al Home
           if (snapshot.hasData) {
-            return HomeScreen();
+            return const HomeScreen();
           }
 
-          // Si no hay datos, vamos al Login
-          return LoginScreen();
+          // Si no hay usuario, vamos al Login
+          return const LoginScreen();
         },
       ),
     );

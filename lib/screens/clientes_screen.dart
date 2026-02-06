@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
 import '../models/cliente.dart';
 import '../services/firestore_service.dart';
-import '../widgets/input_decorations.dart';
 
 class ClientesScreen extends StatefulWidget {
+  const ClientesScreen({super.key});
+
   @override
-  _ClientesScreenState createState() => _ClientesScreenState();
+  State<ClientesScreen> createState() => _ClientesScreenState();
 }
 
 class _ClientesScreenState extends State<ClientesScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Controladores para los campos de texto
+  // Controladores de texto
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
 
-  // Método para mostrar el formulario de crear/editar
+  // Método para mostrar el formulario (Crear o Editar)
   void _mostrarFormulario({Cliente? cliente}) {
     if (cliente != null) {
-      // Editar: rellenamos datos
+      // Editar
       _nombreController.text = cliente.nombre;
       _emailController.text = cliente.email;
       _telefonoController.text = cliente.telefono;
     } else {
-      // Crear: limpiamos datos
+      // Crear
       _nombreController.clear();
       _emailController.clear();
       _telefonoController.clear();
@@ -41,22 +42,31 @@ class _ClientesScreenState extends State<ClientesScreen> {
               children: [
                 TextField(
                   controller: _nombreController,
-                  decoration: InputDecorations.authInputDecoration(
-                      hintText: 'Nombre del cliente', labelText: 'Nombre'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre',
+                    hintText: 'Nombre del cliente',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecorations.authInputDecoration(
-                      hintText: 'cliente@email.com', labelText: 'Email'),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'cliente@email.com',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _telefonoController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecorations.authInputDecoration(
-                      hintText: '+34 600 000 000', labelText: 'Teléfono'),
+                  decoration: const InputDecoration(
+                    labelText: 'Teléfono',
+                    hintText: '+34 600 000 000',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
             ),
@@ -64,10 +74,10 @@ class _ClientesScreenState extends State<ClientesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancelar', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF01488e)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF01488e)),
               onPressed: () async {
                 final nombre = _nombreController.text;
                 final email = _emailController.text;
@@ -75,26 +85,22 @@ class _ClientesScreenState extends State<ClientesScreen> {
 
                 if (nombre.isEmpty) return;
 
+                final nuevoCliente = Cliente(
+                  id: cliente?.id,
+                  nombre: nombre,
+                  email: email,
+                  telefono: telefono,
+                );
+
                 if (cliente == null) {
-                  // Guardar nuevo
-                  await _firestoreService.addCliente(Cliente(
-                    nombre: nombre,
-                    email: email,
-                    telefono: telefono,
-                  ));
+                  await _firestoreService.addCliente(nuevoCliente);
                 } else {
-                  // Actualizar existente
-                  await _firestoreService.updateCliente(Cliente(
-                    id: cliente.id,
-                    nombre: nombre,
-                    email: email,
-                    telefono: telefono,
-                  ));
+                  await _firestoreService.updateCliente(nuevoCliente);
                 }
 
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
-              child: Text('Guardar'),
+              child: const Text('Guardar', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -106,24 +112,24 @@ class _ClientesScreenState extends State<ClientesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Clientes'),
-        backgroundColor: Color(0xFF01488e),
+        title: const Text('Clientes'),
+        backgroundColor: const Color(0xFF01488e),
+        foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Color(0xFF01488e),
-        child: Icon(Icons.add),
+        backgroundColor: const Color(0xFF01488e),
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () => _mostrarFormulario(),
       ),
       body: StreamBuilder<List<Cliente>>(
         stream: _firestoreService.getClientes(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text('Error'));
-          if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
           final clientes = snapshot.data!;
 
           if (clientes.isEmpty) {
-            return Center(child: Text('No hay clientes registrados'));
+            return const Center(child: Text('No hay clientes registrados.'));
           }
 
           return ListView.builder(
@@ -131,16 +137,16 @@ class _ClientesScreenState extends State<ClientesScreen> {
             itemBuilder: (context, index) {
               final cli = clientes[index];
               return Card(
-                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Color(0xFF01488e),
+                    backgroundColor: const Color(0xFF01488e),
                     child: Text(
                       cli.nombre.isNotEmpty ? cli.nombre[0].toUpperCase() : '?',
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  title: Text(cli.nombre, style: TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(cli.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -152,14 +158,12 @@ class _ClientesScreenState extends State<ClientesScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.edit, color: Colors.indigo),
+                        icon: const Icon(Icons.edit, color: Colors.indigo),
                         onPressed: () => _mostrarFormulario(cliente: cli),
                       ),
                       IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red[300]),
-                        onPressed: () async {
-                          await _firestoreService.deleteCliente(cli.id!);
-                        },
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _firestoreService.deleteCliente(cli.id!),
                       ),
                     ],
                   ),

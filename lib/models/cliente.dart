@@ -1,5 +1,5 @@
 class Cliente {
-  String? id; // ID del documento en Firestore
+  String? id;
   String nombre;
   String email;
   String telefono;
@@ -11,7 +11,6 @@ class Cliente {
     required this.telefono,
   });
 
-  // Convertir objeto a Mapa para subir a Firebase
   Map<String, dynamic> toMap() {
     return {
       'nombre': nombre,
@@ -20,10 +19,9 @@ class Cliente {
     };
   }
 
-  // Crear objeto desde un Mapa de Firebase
-  factory Cliente.fromMap(Map<String, dynamic> map, String documentId) {
+  factory Cliente.fromMap(Map<String, dynamic> map, String id) {
     return Cliente(
-      id: documentId,
+      id: id,
       nombre: map['nombre'] ?? '',
       email: map['email'] ?? '',
       telefono: map['telefono'] ?? '',

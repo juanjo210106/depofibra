@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Pedido {
   String? id;
-  String clienteId;  // "Llave foránea" que apunta a la colección clientes
-  String productoId; // "Llave foránea" que apunta a la colección productos
+  String clienteId;
+  String productoId;
   DateTime fecha;
-  String estado;     // Ejemplo: "Pendiente", "En proceso", "Entregado"
+  String estado; // 'Pendiente', 'Entregado', etc.
 
   Pedido({
     this.id,
@@ -19,20 +19,18 @@ class Pedido {
     return {
       'clienteId': clienteId,
       'productoId': productoId,
-      // Firebase prefiere recibir Timestamp, pero suele aceptar DateTime.
-      // Para ser estrictos y evitar errores, lo convertimos:
+      // Firebase necesita Timestamp, no DateTime
       'fecha': Timestamp.fromDate(fecha),
       'estado': estado,
     };
   }
 
-  factory Pedido.fromMap(Map<String, dynamic> map, String documentId) {
+  factory Pedido.fromMap(Map<String, dynamic> map, String id) {
     return Pedido(
-      id: documentId,
+      id: id,
       clienteId: map['clienteId'] ?? '',
       productoId: map['productoId'] ?? '',
-      // IMPORTANTE: Firebase devuelve un objeto 'Timestamp', no un DateTime directo.
-      // Debemos convertirlo con .toDate()
+      // Convertimos el Timestamp de Firebase a DateTime de Dart
       fecha: (map['fecha'] as Timestamp).toDate(),
       estado: map['estado'] ?? 'Pendiente',
     );
